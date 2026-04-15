@@ -19,5 +19,5 @@ pid.recv(timeout=1.0)
 
 print(text.red("[+]") + " FLAG turbine_remote_access:")
 os.system("find ./Data/ -type f -exec cat {} \\;")
-print()
+print("\n")
 os.system("rm -rf Data")

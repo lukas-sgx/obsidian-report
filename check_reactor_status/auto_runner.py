@@ -28,7 +28,7 @@ def main():
 
     line = pid.recvline_startswith(b'Encrypted message:')
 
-    print(text.red("[+]") + " Vuln cipher caesar - check_reactor_status:")
+    print(text.red("[+]") + " Vuln Insecure Randomness - check_reactor_status:")
     print(cipher(line.decode().split()[2], 3))
     print()
 

@@ -10,12 +10,12 @@ context.log_level = 'error'
 env = os.environ.copy()
 env['LD_LIBRARY_PATH'] = './runner/external/'
 
-os.system("clang ./init_steam_turbine/decompiler/main.c -o ./init_steam_turbine/decompiler/main")
-os.system("clang ./init_steam_turbine/decompiler/rand.c -o ./init_steam_turbine/decompiler/rand")
-pid = process(['./init_steam_turbine/decompiler/main'], env=env)
+os.system("clang ./external_lib/init_steam_turbine/decompiler/main.c -o ./external_lib/init_steam_turbine/decompiler/main")
+os.system("clang ./external_lib/init_steam_turbine/decompiler/rand.c -o ./external_lib/init_steam_turbine/decompiler/rand")
+pid = process(['./external_lib/init_steam_turbine/decompiler/main'], env=env)
 line = pid.recvline_startswith(b'magix - decompil:')
 
 print(text.red("[+]") + " Vuln Insecure Randomness - init_steam_turbine:")
 print(line.decode(errors='ignore'))
-os.system("./init_steam_turbine/decompiler/rand")
+os.system("./external_lib/init_steam_turbine/decompiler/rand")
 print()

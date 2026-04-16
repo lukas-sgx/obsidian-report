@@ -18,7 +18,7 @@ def main():
     pid.sendline(b'debug')
     line = pid.recvlines(timeout=1.0)
 
-    print(text.red("[+]") + " Vuln Weak Encryption - run_diagnostic:")
+    print(text.red("[+]") + " Vuln Harcoded Credentials - run_diagnostic:")
     print(line[1].decode()[19:])
     print()
 

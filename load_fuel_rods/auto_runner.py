@@ -19,7 +19,7 @@ def main():
     line = pid.recvlines(timeout=1.0)
 
     print(text.red("[+]") + " Vuln Buffer Overflow - load_fuel_rods:")
-    print(line[2][12:].decode())
+    print(line[2][12:])
     print()
 
 

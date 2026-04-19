@@ -2,6 +2,7 @@
 
 from pwn import *
 import os
+import re
 import warnings
 
 def main():
@@ -11,15 +12,19 @@ def main():
     env = os.environ.copy()
     env['LD_LIBRARY_PATH'] = './runner/external/'
 
-    pid = process(['./runner/run.sh'], env=env)
-    pid.recv(numb=100, timeout=1.0)
-    pid.sendline(b'load_fuel_rods')
-    pid.recv(timeout=1.0)
-    pid.sendline(b'10')
-    line = pid.recvlines(timeout=1.0)
+    output = b''
+
+    for _ in range(3):
+        pid = process(['./runner/run.sh'], env=env)
+        pid.recvuntil(b'\x00', timeout=1.0)
+        pid.sendline(b'load_fuel_rods')
+        pid.sendline(b'10')
+
+        output = pid.recvrepeat(timeout=1.2)
+        pid.close()
 
     print(text.red("[+]") + " Vuln Buffer Overflow - load_fuel_rods:")
-    print(line[2][12:])
+    print(output.splitlines()[3][12:-2])
     print()
 
 

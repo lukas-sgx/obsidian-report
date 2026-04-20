@@ -2,7 +2,6 @@
 
 from pwn import *
 import os
-import re
 import warnings
 
 def main():

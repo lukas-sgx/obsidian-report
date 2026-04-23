@@ -3,7 +3,7 @@ Black-box Audit
 In this phase, we analyzed the binary using reverse engineering tools and manual fuzzing. List of the tools you used :
 - Cutter
 - Ghidra
-- Gdb-ged
+- Gdb-gef
 - Upx
 
 #### Key discoveries:

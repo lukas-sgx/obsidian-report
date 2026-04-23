@@ -790,3 +790,7 @@ Impact:
 Exposure of embedded secret values
 Loss of confidentiality for client-distributed logic/data
 
+
+![alt text](assets/logo.png)
+### The Stone Corporation
+#### Lukas Soigneux

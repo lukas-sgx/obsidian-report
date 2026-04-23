@@ -791,6 +791,29 @@ Exposure of embedded secret values
 Loss of confidentiality for client-distributed logic/data
 
 
+## Conclusion
+
+This audit campaign highlights a high overall risk level for the security of the OBSIDIAN platform.
+The identified vulnerabilities span multiple critical classes (hardcoded credentials, bypass, memory corruption, buffer overflow, weak encrypting, insecure randomness), confirming structural weaknesses rather than isolated cases.
+
+The main business and operational impacts are:
+- Privilege escalation and bypass of security controls.
+- Exposure of sensitive information and potential leakage of reusable secrets.
+- Possible system destabilization (crashes, critical states, unexpected behavior).
+- Increased risk of full compromise through vulnerability chaining.
+
+Recommended remediation priorities:
+1. Immediately remove all hardcoded secrets and implement centralized secret management.
+2. Fix memory safety and dangerous conversion issues (overflow/underflow, stack corruption, boundary checks).
+3. Strengthen access controls and validation logic to eliminate bypass paths.
+4. Replace weak mechanisms (base64-as-protection, trivial ciphers, rand/time) with robust cryptographic and randomness primitives.
+5. Add defense in depth: binary hardening, compiler protections, security code review, and security regression testing in CI.
+
+In conclusion, the current binary state does not provide an acceptable production security level without prioritized remediation of the critical issues identified in this report.
+
+
+
+
 ![alt text](assets/logo.png)
 ### The Stone Corporation
 #### Lukas Soigneux

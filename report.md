@@ -7,7 +7,7 @@ In this phase, we analyzed the binary using reverse engineering tools and manual
 - Upx
 
 #### Key discoveries:
-- The binary was found to be packed with UPX. It was successfully unpacked using upx -d `obsidian`, revealing the original executable for further static analysis. Then I tried to reconstruct path & function usage
+- The binary was found to be packed with UPX. It was successfully unpacked using `upx -d obsidian`, revealing the original executable for further static analysis. Then I tried to reconstruct path & function usage
 
 
 ## Vulnerability Report

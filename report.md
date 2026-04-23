@@ -10,11 +10,11 @@ In this phase, we analyzed the binary using reverse engineering tools and manual
 - The binary was found to be packed with UPX. It was successfully unpacked using upx -d `obsidian`, revealing the original executable for further static analysis. Then I tried to reconstruct path & function usage
 
 
-## ## Vulnerability Report
+## Vulnerability Report
 Below is the list of vulnerabilities discovered, ranked by severity:
 
 
-## Vulnerability #1: activate_emergency_protocols
+### Vulnerability #1: activate_emergency_protocols
 
 
 Severity: Critical
@@ -43,7 +43,7 @@ Unauthorized access to admin/emergency controls (high-confidence)
 Potential full operational takeover of critical reactor functions if this command is reachable in production context (critical business/operational risk)
 
 
-## Vulnerability #2: alchemy
+### Vulnerability #2: alchemy
 
 
 Severity: High
@@ -88,7 +88,7 @@ Secret recovery by reverse engineering
 Potential reuse of recovered secret in other modules
 
 
-## Vulnerability #3: check_cooling_pressure
+### Vulnerability #3: check_cooling_pressure
 
 
 Severity: High
@@ -135,7 +135,7 @@ Unauthorized disclosure of sensitive operational information
 Facilitates chained attacks with other privileged functions
 
 
-## Vulnerability #4: run_diagnostic
+### Vulnerability #4: run_diagnostic
 
 
 Severity: High
@@ -183,7 +183,7 @@ Privilege escalation through undocumented debug path
 Information disclosure from restricted diagnostics
 
 
-## Vulnerability #5: check_reactor_status
+### Vulnerability #5: check_reactor_status
 
 
 Severity: Medium
@@ -240,7 +240,7 @@ Loss of confidentiality of supposedly protected status data
 Attackers can decode messages without key material
 
 
-## Vulnerability #6: send_status_report
+### Vulnerability #6: send_status_report
 
 
 Severity: Medium
@@ -290,7 +290,7 @@ Sensitive status report disclosure
 False sense of security for transmitted or stored data
 
 
-## Vulnerability #7: init_steam_turbine
+### Vulnerability #7: init_steam_turbine
 
 
 Severity: Medium
@@ -336,7 +336,7 @@ Predictable random-dependent behavior
 Potential bypass of logic that assumes randomness
 
 
-## Vulnerability #8: simulate_meltdown
+### Vulnerability #8: simulate_meltdown
 
 
 Severity: Medium
@@ -386,7 +386,7 @@ Unauthorized triggering of critical error states
 Increased operational risk from probabilistic abuse
 
 
-## Vulnerability #9: read_turbine_config
+### Vulnerability #9: read_turbine_config
 
 
 Severity: High
@@ -433,7 +433,7 @@ Arbitrary file read (subject to process privileges)
 Disclosure of host and credential-related data
 
 
-## Vulnerability #10: run_turbine
+### Vulnerability #10: run_turbine
 
 
 Severity: Medium
@@ -480,7 +480,7 @@ Logic bypass of input constraints
 Unexpected runtime behavior and potential stability issues
 
 
-## Vulnerability #11: turbine_explode
+### Vulnerability #11: turbine_explode
 
 
 Severity: Medium
@@ -524,7 +524,7 @@ Forced critical failure path
 Potential denial of service and unsafe state transitions
 
 
-## Vulnerability #12: set_reactor_power
+### Vulnerability #12: set_reactor_power
 
 
 Severity: Medium
@@ -553,7 +553,7 @@ Bypass of expected validation constraints
 Unauthorized state transitions when debugger access exists
 
 
-## Vulnerability #13: load_fuel_rods
+### Vulnerability #13: load_fuel_rods
 
 
 Severity: Critical
@@ -606,7 +606,7 @@ Process crash / denial of service
 High exploitability in native binary context
 
 
-## Vulnerability #14: monitor_radiation_levels
+### Vulnerability #14: monitor_radiation_levels
 
 
 Severity: Critical
@@ -637,7 +637,7 @@ Potential code execution in process context
 Severe integrity compromise
 
 
-## Vulnerability #15: turbine_remote_access
+### Vulnerability #15: turbine_remote_access
 
 
 Severity: Medium
@@ -681,7 +681,7 @@ Disclosure of sensitive access tokens/flags
 Race-window based data leakage
 
 
-## Vulnerability #16: emergency_shutdown
+### Vulnerability #16: emergency_shutdown
 
 
 Severity: High
@@ -713,7 +713,7 @@ Forced privileged shutdown flow
 Bypass of expected safety checks in debug-capable context
 
 
-## Vulnerability #17: quit
+### Vulnerability #17: quit
 
 
 Severity: Medium
@@ -737,7 +737,7 @@ Bypass of intended quit/control checks
 Potential abuse of hidden branches in debug context
 
 
-## Vulnerability #18: log_system_event
+### Vulnerability #18: log_system_event
 
 
 Severity: Medium
@@ -766,7 +766,7 @@ Impact:
 Unauthorized access to protected log resources
 Integrity loss of runtime decision state
 
-## Vulnerability #19: call_api
+### Vulnerability #19: call_api
 
 
 Severity: Medium

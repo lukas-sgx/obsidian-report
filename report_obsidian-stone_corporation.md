@@ -520,6 +520,8 @@ Description:<br>
 Random values are generated with rand() seeded by time(NULL).<br>
 This pattern is predictable and reproducible when seed timing is known or approximated.
 
+![alt text](assets/random_hour.png)
+
 Proof of Concept:
 ```c
 srand((__u_int)time((time_t *)0x0));

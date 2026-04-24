@@ -112,6 +112,8 @@ Description:<br>
 The exploit overwrites a stack slot with a function address and diverts execution.<br>
 This behavior is consistent with memory safety weakness enabling direct control-flow manipulation.
 
+![alt text](assets/monitor_radiation_levels.png)
+
 Proof of Concept:
 ```gdb
 break *0x004027e8

@@ -518,7 +518,7 @@ Discovered in: Black-box<br>
 
 Description:<br>
 Random values are generated with rand() seeded by time(NULL).<br>
-This pattern is predictable and reproducible when seed timing is known or approximated.
+This pattern is predictable and reproducible when seed timing is known or approximated because it depend actual time.
 
 ![alt text](assets/random_hour.png)
 
